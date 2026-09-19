@@ -26,7 +26,7 @@ async function handleGameAnswer(game, message) {
   const channel = message.channel;
 
   // Bỏ qua người bị lock
-  if (game.isLocked(userId)) return;
+  if (game.lockedPlayers.has(userId)) return;
 
   const result = game.processAnswer(userId, input);
 
