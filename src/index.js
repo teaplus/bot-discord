@@ -79,6 +79,16 @@ for (const file of eventFiles) {
   }
   console.log(`  📡 Event loaded: ${event.name}`);
 }
+
+client.once("ready", () => {
+  console.log(`✅ BOT ĐÃ ONLINE! Đăng nhập dưới tên: ${client.user.tag}`);
+
+  // Tự động set trạng thái Online và hiển thị game đang chơi
+  client.user.setPresence({
+    activities: [{ name: "Game Nối Từ (!noitu)" }],
+    status: "online", // Chuyển chấm xám thành chấm xanh
+  });
+});
 // Kiểm tra xem token có tồn tại không
 if (!process.env.DISCORD_TOKEN) {
   console.error(
@@ -92,12 +102,3 @@ if (!process.env.DISCORD_TOKEN) {
 }
 // ─── Đăng nhập ───────────────────────────────────────────────────────────────
 client.login(process.env.DISCORD_TOKEN);
-client.once("ready", () => {
-  console.log(`✅ BOT ĐÃ ONLINE! Đăng nhập dưới tên: ${client.user.tag}`);
-
-  // Tự động set trạng thái Online và hiển thị game đang chơi
-  client.user.setPresence({
-    activities: [{ name: "Game Nối Từ (!noitu)" }],
-    status: "online", // Chuyển chấm xám thành chấm xanh
-  });
-});
