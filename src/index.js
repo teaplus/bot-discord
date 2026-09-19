@@ -1,11 +1,13 @@
 import "dotenv/config";
 import { Client, Collection, GatewayIntentBits } from "discord.js";
-import { readdirSync } from "fs";
+import { readdirSync, existsSync } from "fs";
 import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import express from "express";
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 app.get("/", (req, res) => {
   res.send("Bot Discord Nối Từ đang chạy 24/7!");
 });
@@ -21,84 +23,101 @@ const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
     GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent, // cần cho prefix commands
+    GatewayIntentBits.MessageContent,
   ],
 });
 
 // ─── Load Slash Commands ──────────────────────────────────────────────────────
 client.slashCommands = new Collection();
-
 const commandsPath = join(__dirname, "commands");
-const commandFolders = readdirSync(commandsPath);
 
-for (const folder of commandFolders) {
-  const folderPath = join(commandsPath, folder);
-  const commandFiles = readdirSync(folderPath).filter((f) => f.endsWith(".js"));
+if (existsSync(commandsPath)) {
+  const commandFolders = readdirSync(commandsPath);
+  for (const folder of commandFolders) {
+    const folderPath = join(commandsPath, folder);
+    const commandFiles = readdirSync(folderPath).filter((f) => f.endsWith(".js"));
 
-  for (const file of commandFiles) {
-    const filePath = join(folderPath, file);
-    const { default: command } = await import(`file://${filePath}`);
+    for (const file of commandFiles) {
+      try {
+        const filePath = join(folderPath, file);
+        const fileUrl = pathToFileURL(filePath).href; // Tối ưu đường dẫn fileURL cho Linux/Render
+        const { default: command } = await import(fileUrl);
 
-    if ("data" in command && "execute" in command) {
-      client.slashCommands.set(command.data.name, command);
-      console.log(`  ✅ Slash loaded: /${command.data.name}`);
-    } else {
-      console.warn(`  ⚠️  Bỏ qua ${file} – thiếu "data" hoặc "execute"`);
+        if (command && "data" in command && "execute" in command) {
+          client.slashCommands.set(command.data.name, command);
+          console.log(`  ✅ Slash loaded: /${command.data.name}`);
+        } else {
+          console.warn(`  ⚠️  Bỏ qua ${file} – thiếu "data" hoặc "execute"`);
+        }
+      } catch (err) {
+        console.error(`  ❌ Lỗi khi nạp Slash Command (${file}):`, err.message);
+      }
     }
   }
+} else {
+  console.warn("  ⚠️ Không tìm thấy thư mục 'commands'");
 }
 
 // ─── Load Prefix Commands ─────────────────────────────────────────────────────
 client.prefixCommands = new Collection();
-
 const prefixPath = join(__dirname, "prefix");
-const prefixFiles = readdirSync(prefixPath).filter((f) => f.endsWith(".js"));
 
-for (const file of prefixFiles) {
-  const filePath = join(prefixPath, file);
-  const { default: command } = await import(`file://${filePath}`);
+if (existsSync(prefixPath)) {
+  const prefixFiles = readdirSync(prefixPath).filter((f) => f.endsWith(".js"));
+  for (const file of prefixFiles) {
+    try {
+      const filePath = join(prefixPath, file);
+      const fileUrl = pathToFileURL(filePath).href;
+      const { default: command } = await import(fileUrl);
 
-  if ("name" in command && "execute" in command) {
-    client.prefixCommands.set(command.name, command);
-    console.log(`  ✅ Prefix loaded: !${command.name}`);
+      if (command && "name" in command && "execute" in command) {
+        client.prefixCommands.set(command.name, command);
+        console.log(`  ✅ Prefix loaded: !${command.name}`);
+      }
+    } catch (err) {
+      console.error(`  ❌ Lỗi khi nạp Prefix Command (${file}):`, err.message);
+    }
   }
+} else {
+  console.warn("  ⚠️ Không tìm thấy thư mục 'prefix'");
 }
 
 // ─── Load Events ─────────────────────────────────────────────────────────────
 const eventsPath = join(__dirname, "events");
-const eventFiles = readdirSync(eventsPath).filter((f) => f.endsWith(".js"));
 
-for (const file of eventFiles) {
-  const filePath = join(eventsPath, file);
-  const { default: event } = await import(`file://${filePath}`);
+if (existsSync(eventsPath)) {
+  const eventFiles = readdirSync(eventsPath).filter((f) => f.endsWith(".js"));
+  for (const file of eventFiles) {
+    try {
+      const filePath = join(eventsPath, file);
+      const fileUrl = pathToFileURL(filePath).href;
+      const { default: event } = await import(fileUrl);
 
-  if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args, client));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args, client));
+      if (event && event.name && event.execute) {
+        if (event.once) {
+          client.once(event.name, (...args) => event.execute(...args, client));
+        } else {
+          client.on(event.name, (...args) => event.execute(...args, client));
+        }
+        console.log(`  📡 Event loaded: ${event.name}`);
+      }
+    } catch (err) {
+      console.error(`  ❌ Lỗi khi nạp Event (${file}):`, err.message);
+    }
   }
-  console.log(`  📡 Event loaded: ${event.name}`);
-}
-
-client.once("ready", () => {
-  console.log(`✅ BOT ĐÃ ONLINE! Đăng nhập dưới tên: ${client.user.tag}`);
-
-  // Tự động set trạng thái Online và hiển thị game đang chơi
-  client.user.setPresence({
-    activities: [{ name: "Game Nối Từ (!noitu)" }],
-    status: "online", // Chuyển chấm xám thành chấm xanh
-  });
-});
-// Kiểm tra xem token có tồn tại không
-if (!process.env.DISCORD_TOKEN) {
-  console.error(
-    "❌ ERROR: Chưa khai báo biến DISCORD_TOKEN trong Environment!"
-  );
 } else {
-  console.log(
-    "✅ Đã tìm thấy DISCORD_TOKEN. Độ dài:",
-    process.env.DISCORD_TOKEN.length
-  );
+  console.warn("  ⚠️ Không tìm thấy thư mục 'events'");
 }
-// ─── Đăng nhập ───────────────────────────────────────────────────────────────
-client.login(process.env.DISCORD_TOKEN);
+
+// ─── Đăng nhập & Bắt lỗi ─────────────────────────────────────────────────────
+if (!process.env.DISCORD_TOKEN) {
+  console.error("❌ ERROR: Chưa khai báo biến DISCORD_TOKEN trong Environment!");
+} else {
+  console.log("✅ Đã tìm thấy DISCORD_TOKEN. Độ dài:", process.env.DISCORD_TOKEN.length);
+}
+
+console.log("🔄 Đang tiến hành kết nối tới Discord...");
+
+client.login(process.env.DISCORD_TOKEN).catch((err) => {
+  console.error("❌ Kết nối Discord thất bại:", err.message);
+});
