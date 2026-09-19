@@ -12,10 +12,6 @@ app.get("/", (req, res) => {
   res.send("Bot Discord Nối Từ đang chạy 24/7!");
 });
 
-app.listen(PORT, () => {
-  console.log(`🌐 Keep-alive server đang chạy tại port ${PORT}`);
-});
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── Khởi tạo client ─────────────────────────────────────────────────────────
@@ -35,7 +31,9 @@ if (existsSync(commandsPath)) {
   const commandFolders = readdirSync(commandsPath);
   for (const folder of commandFolders) {
     const folderPath = join(commandsPath, folder);
-    const commandFiles = readdirSync(folderPath).filter((f) => f.endsWith(".js"));
+    const commandFiles = readdirSync(folderPath).filter((f) =>
+      f.endsWith(".js")
+    );
 
     for (const file of commandFiles) {
       try {
@@ -111,13 +109,22 @@ if (existsSync(eventsPath)) {
 
 // ─── Đăng nhập & Bắt lỗi ─────────────────────────────────────────────────────
 if (!process.env.DISCORD_TOKEN) {
-  console.error("❌ ERROR: Chưa khai báo biến DISCORD_TOKEN trong Environment!");
+  console.error(
+    "❌ ERROR: Chưa khai báo biến DISCORD_TOKEN trong Environment!"
+  );
 } else {
-  console.log("✅ Đã tìm thấy DISCORD_TOKEN. Độ dài:", process.env.DISCORD_TOKEN.length);
+  console.log(
+    "✅ Đã tìm thấy DISCORD_TOKEN. Độ dài:",
+    process.env.DISCORD_TOKEN.length
+  );
 }
 
 console.log("🔄 Đang tiến hành kết nối tới Discord...");
 
 client.login(process.env.DISCORD_TOKEN).catch((err) => {
   console.error("❌ Kết nối Discord thất bại:", err.message);
+});
+
+app.listen(PORT, () => {
+  console.log(`🌐 Keep-alive server đang chạy tại port ${PORT}`);
 });
