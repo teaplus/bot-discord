@@ -61,9 +61,18 @@ export function getRandomStartPhrase() {
   for (let i = 0; i < 2000; i++) {
     const w1 = keys[Math.floor(Math.random() * keys.length)];
     const nexts = [...dictionary.get(w1)];
+
     if (nexts.length > 0) {
-      const w2 = nexts[Math.floor(Math.random() * nexts.length)];
-      return { phrase: `${w1} ${w2}`, firstWord: w1, secondWord: w2 };
+      // Bỏ qua những từ w2 mà bản thân nó không có từ nào nối tiếp (dead-end)
+      const validNexts = nexts.filter((w2) => {
+        const nextNexts = dictionary.get(w2);
+        return nextNexts && nextNexts.size > 0;
+      });
+
+      if (validNexts.length > 0) {
+        const w2 = validNexts[Math.floor(Math.random() * validNexts.length)];
+        return { phrase: `${w1} ${w2}`, firstWord: w1, secondWord: w2 };
+      }
     }
   }
   throw new Error("Không tìm được phrase bắt đầu hợp lệ");
