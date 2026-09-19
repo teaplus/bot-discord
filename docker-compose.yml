@@ -1,0 +1,27 @@
+services:
+  bot:
+    build: .
+    container_name: kinhdich-bot
+    restart: unless-stopped
+
+    # Đọc token và config từ .env
+    env_file:
+      - .env
+
+    volumes:
+      # Persist ảnh đã tải giữa các lần restart
+      - assets_data:/app/assets
+
+    # Không cần expose port (bot Discord, không có HTTP)
+
+    # Ghi log ra stdout, giới hạn dung lượng
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  assets_data:
+    name: kinhdich_assets
+

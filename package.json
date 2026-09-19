@@ -1,0 +1,39 @@
+{
+  "name": "tieudao",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "deploy": "node src/deploy-commands.js",
+    "download:images": "python scripts/download_images.py",
+    "simulate:battle": "node src/tools/simulateBattle.js",
+    "simulate:exploration": "node src/tools/simulateExploration.js",
+    "simulate:secret-realm": "node src/tools/simulateSecretRealm.js",
+    "simulate:craft": "node src/tools/simulateCraft.js",
+    "simulate:exchange": "node src/tools/simulateExchange.js",
+    "simulate:sect": "node src/tools/simulateSect.js",
+    "simulate:gathering": "node src/tools/simulateGathering.js",
+    "simulate:reward-runtime": "node src/tools/simulateRewardRuntime.js",
+    "simulate:player-progress": "node src/tools/simulatePlayerProgress.js",
+    "simulate:treasure-hunt": "node src/tools/simulateTreasureHunt.js",
+    "simulate:shop": "node src/tools/simulateShop.js",
+    "audit:data-schema-alignment": "node src/tools/auditDataSchemaAlignment.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@prisma/client": "^7.8.0",
+    "discord.js": "^14.26.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "pg": "^8.22.0",
+    "sharp": "^0.35.4"
+  },
+  "devDependencies": {
+    "prisma": "^7.8.0"
+  }
+}
