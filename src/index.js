@@ -79,7 +79,12 @@ for (const file of eventFiles) {
   }
   console.log(`  📡 Event loaded: ${event.name}`);
 }
-
+// Kiểm tra xem token có tồn tại không
+if (!process.env.DISCORD_TOKEN) {
+  console.error("❌ ERROR: Chưa khai báo biến DISCORD_TOKEN trong Environment!");
+} else {
+  console.log("✅ Đã tìm thấy DISCORD_TOKEN. Độ dài:", process.env.DISCORD_TOKEN.length);
+}
 // ─── Đăng nhập ───────────────────────────────────────────────────────────────
 client.login(process.env.DISCORD_TOKEN);
 
