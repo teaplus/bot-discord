@@ -8,10 +8,13 @@ export class GameSession {
     this.mode = mode; // 'bot' | 'player'
     this.hiderId = hiderId;
     this.seekerId = seekerId;
-    this.hiddenRoom = mode === 'bot' ? Math.floor(Math.random() * 10) + 1 : null;
+    this.hiddenRoom =
+      mode === "bot"
+        ? { x: Math.floor(Math.random() * 5), y: Math.floor(Math.random() * 5) }
+        : null;
     this.guessedRooms = [];
-    this.attemptsLeft = 3;
-    this.status = mode === 'bot' ? 'PLAYING' : 'WAITING_HIDER'; // 'WAITING_HIDER' | 'PLAYING' | 'FINISHED'
+    this.attemptsLeft = 5;
+    this.status = mode === "bot" ? "PLAYING" : "WAITING_HIDER"; // 'WAITING_HIDER' | 'PLAYING' | 'FINISHED'
     this.timeoutTimer = null;
     this.resetTimeout();
   }
@@ -20,53 +23,53 @@ export class GameSession {
     if (this.timeoutTimer) clearTimeout(this.timeoutTimer);
     this.timeoutTimer = setTimeout(() => {
       this.end();
-      // Optional: we can't easily send a message from here without the channel object, 
-      // but it safely clears from memory.
     }, AFK_TIMEOUT);
   }
 
-  hideInRoom(roomNumber) {
-    if (this.status !== 'WAITING_HIDER') return false;
-    this.hiddenRoom = roomNumber;
-    this.status = 'PLAYING';
+  hideInRoom(x, y) {
+    if (this.status !== "WAITING_HIDER") return false;
+    this.hiddenRoom = { x, y };
+    this.status = "PLAYING";
     this.resetTimeout();
     return true;
   }
 
-  guessRoom(roomNumber) {
-    if (this.status !== 'PLAYING') return { valid: false };
-    if (this.guessedRooms.includes(roomNumber)) return { valid: false };
+  guessRoom(x, y) {
+    if (this.status !== "PLAYING") return { valid: false };
+    if (this.guessedRooms.some((r) => r.x === x && r.y === y))
+      return { valid: false };
 
-    this.guessedRooms.push(roomNumber);
+    this.guessedRooms.push({ x, y });
     this.attemptsLeft--;
     this.resetTimeout();
 
-    const distance = Math.abs(this.hiddenRoom - roomNumber);
-    let hint = '';
-    let result = '';
+    const distance =
+      Math.abs(this.hiddenRoom.x - x) + Math.abs(this.hiddenRoom.y - y);
+    let hint = "";
+    let result = "";
 
     if (distance === 0) {
-      this.status = 'FINISHED';
-      result = 'WIN';
-      hint = '🎉 CHÍNH XÁC!';
+      this.status = "FINISHED";
+      result = "WIN";
+      hint = "🎉 CHÍNH XÁC!";
     } else {
       if (distance === 1) {
-        hint = '🔴 Rất Nóng! Sát vách rồi, tiếng thở ở ngay cạnh!';
+        hint = "🔴 Rất Nóng! Sát vách rồi, tiếng thở ở ngay cạnh!";
       } else if (distance === 2) {
-        hint = '🟡 Ấm. Có tiếng sột soạt quanh khu vực này.';
+        hint = "🟡 Ấm. Có tiếng sột soạt lờ mờ gần đây.";
       } else {
-        hint = '🔵 Lạnh ngắt. Xung quanh im ắng, không có ai ở đây cả.';
+        hint = "🔵 Lạnh ngắt. Xung quanh im ắng, sai khu vực rồi.";
       }
 
       if (this.attemptsLeft <= 0) {
-        this.status = 'FINISHED';
-        result = 'LOSE';
+        this.status = "FINISHED";
+        result = "LOSE";
       } else {
-        result = 'CONTINUE';
+        result = "CONTINUE";
       }
     }
 
-    if (this.status === 'FINISHED') this.clearTimeout();
+    if (this.status === "FINISHED") this.clearTimeout();
 
     return { valid: true, result, hint, distance };
   }
@@ -76,7 +79,7 @@ export class GameSession {
   }
 
   end() {
-    this.status = 'FINISHED';
+    this.status = "FINISHED";
     this.clearTimeout();
     games.delete(this.channelId);
   }
@@ -100,4 +103,3 @@ export function endGame(channelId) {
   const game = games.get(channelId);
   if (game) game.end();
 }
-

@@ -1,48 +1,43 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
+} from "discord.js";
 
 export function buildDoorsUI(game, showRealPosition = false) {
   const rows = [];
-  let currentRow = new ActionRowBuilder();
 
-  for (let i = 1; i <= 10; i++) {
-    const btn = new ButtonBuilder()
-      .setCustomId(`trontim_room_${i}`);
+  for (let y = 0; y < 5; y++) {
+    let currentRow = new ActionRowBuilder();
+    for (let x = 0; x < 5; x++) {
+      const btn = new ButtonBuilder().setCustomId(`trontim_room_${x}_${y}`);
 
-    const isGuessed = game.guessedRooms.includes(i);
-    const isHiddenRoom = game.hiddenRoom === i;
+      const isGuessed = game.guessedRooms.some((r) => r.x === x && r.y === y);
+      const isHiddenRoom =
+        game.hiddenRoom && game.hiddenRoom.x === x && game.hiddenRoom.y === y;
 
-    if (isGuessed) {
-      if (isHiddenRoom) {
-        btn.setLabel(`Phòng ${i}`)
-           .setEmoji('👻')
-           .setStyle(ButtonStyle.Success)
-           .setDisabled(true);
+      if (isGuessed) {
+        if (isHiddenRoom) {
+          btn.setEmoji("👻").setStyle(ButtonStyle.Success).setDisabled(true);
+        } else {
+          btn.setEmoji("💨").setStyle(ButtonStyle.Secondary).setDisabled(true);
+        }
       } else {
-        btn.setLabel(`Phòng ${i}`)
-           .setEmoji('💨')
-           .setStyle(ButtonStyle.Secondary)
-           .setDisabled(true);
+        if (showRealPosition && isHiddenRoom) {
+          // Hết lượt, lộ vị trí thực
+          btn.setEmoji("👻").setStyle(ButtonStyle.Success).setDisabled(true);
+        } else {
+          // Chưa mở
+          btn
+            .setEmoji("🚪")
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(showRealPosition || game.status !== "PLAYING"); // disable hết nếu game over
+        }
       }
-    } else {
-      if (showRealPosition && isHiddenRoom) {
-        // Hết lượt, lộ vị trí thực
-        btn.setLabel(`Phòng ${i}`)
-           .setEmoji('👻')
-           .setStyle(ButtonStyle.Success)
-           .setDisabled(true);
-      } else {
-        // Chưa mở
-        btn.setLabel(`Phòng ${i}`)
-           .setStyle(ButtonStyle.Primary)
-           .setDisabled(showRealPosition || game.status !== 'PLAYING'); // disable hết nếu game over
-      }
+      currentRow.addComponents(btn);
     }
-
-    currentRow.addComponents(btn);
-    if (i % 5 === 0) {
-      rows.push(currentRow);
-      currentRow = new ActionRowBuilder();
-    }
+    rows.push(currentRow);
   }
 
   return rows;
@@ -50,20 +45,17 @@ export function buildDoorsUI(game, showRealPosition = false) {
 
 export function buildHiderUI() {
   const rows = [];
-  let currentRow = new ActionRowBuilder();
 
-  for (let i = 1; i <= 10; i++) {
-    const btn = new ButtonBuilder()
-      .setCustomId(`trontim_hide_${i}`)
-      .setLabel(`Phòng ${i}`)
-      .setStyle(ButtonStyle.Primary);
-
-    currentRow.addComponents(btn);
-    if (i % 5 === 0) {
-      rows.push(currentRow);
-      currentRow = new ActionRowBuilder();
+  for (let y = 0; y < 5; y++) {
+    let currentRow = new ActionRowBuilder();
+    for (let x = 0; x < 5; x++) {
+      const btn = new ButtonBuilder()
+        .setCustomId(`trontim_hide_${x}_${y}`)
+        .setEmoji("🚪")
+        .setStyle(ButtonStyle.Primary);
+      currentRow.addComponents(btn);
     }
+    rows.push(currentRow);
   }
   return rows;
 }
-
