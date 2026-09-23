@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "deploy": "node src/deploy-commands.js",
+    "reset": "node src/reset-commands.js",
     "download:images": "python scripts/download_images.py",
     "simulate:battle": "node src/tools/simulateBattle.js",
     "simulate:exploration": "node src/tools/simulateExploration.js",
